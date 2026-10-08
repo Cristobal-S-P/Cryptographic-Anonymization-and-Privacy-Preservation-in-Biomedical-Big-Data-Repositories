@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Proyecto 7 - Demo 100 registros",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["--generate-demo", "--patients", "20", "--records-per-patient", "5"]
+    },
+    {
+      "name": "Proyecto 7 - Demo 1000 registros",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "args": ["--generate-demo", "--patients", "200", "--records-per-patient", "5"]
+    },
+    {
+      "name": "Proyecto 7 - Ejecutar pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": ["-v"]
+    }
+  ]
+}

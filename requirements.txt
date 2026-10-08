@@ -1,0 +1,4 @@
+pandas>=2.2,<3.0
+cryptography>=43,<47
+numpy>=2.0,<3.0
+pytest>=8.0,<10.0
