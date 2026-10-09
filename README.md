@@ -1,4 +1,4 @@
-# Proyecto 7 — Anonimización criptográfica de datos clínicos
+# Anonimización criptográfica y preservación de privacidad en repositorios de Big Data biomédico (Concepto de Zero-Knowledge Simplificado)
 
 Implementación académica en Python para VS Code. Fragmenta un CSV clínico con PII simulada en dos repositorios enlazados por un pseudónimo criptográfico.
 
