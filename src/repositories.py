@@ -50,7 +50,10 @@ class AnalyticalRepository:
         pseudonym = str(row["pseudonym"])
         previous = self._risk_by_pseudonym.get(pseudonym, False)
         self._risk_by_pseudonym[pseudonym] = previous or bool(row["risk_group"])
-        self._pubkey_by_pseudonym[pseudonym] = int(row["schnorr_public_key"])
+        public_key = row["schnorr_public_key"]
+        self._pubkey_by_pseudonym[pseudonym] = (
+            int(public_key, 16) if isinstance(public_key, str) else int(public_key)
+        )
 
     def get_risk(self, pseudonym: str) -> bool | None:
         return self._risk_by_pseudonym.get(pseudonym)

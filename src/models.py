@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -17,7 +17,7 @@ class ClinicalRecord:
 @dataclass(frozen=True)
 class PatientCredential:
     pseudonym: str
-    schnorr_secret: int
+    schnorr_secret: int = field(repr=False)
 
 
 @dataclass(frozen=True)

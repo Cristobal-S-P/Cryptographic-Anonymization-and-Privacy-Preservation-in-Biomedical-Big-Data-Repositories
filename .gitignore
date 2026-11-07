@@ -3,4 +3,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 keys/
+*.key
+*.pem
+.env
+data/output/*.csv
 credentials_demo.csv

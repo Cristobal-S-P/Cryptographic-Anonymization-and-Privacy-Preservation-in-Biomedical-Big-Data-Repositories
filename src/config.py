@@ -23,3 +23,13 @@ REQUIRED_COLUMNS = {
     "diastolic_bp",
     "heart_rate",
 }
+
+# Límites de validación técnica amplios; no son criterios diagnósticos.
+AGE_MIN = 0
+AGE_MAX = 120
+SYSTOLIC_BP_MIN = 50
+SYSTOLIC_BP_MAX = 260
+DIASTOLIC_BP_MIN = 20
+DIASTOLIC_BP_MAX = 180
+HEART_RATE_MIN = 20
+HEART_RATE_MAX = 250

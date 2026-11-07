@@ -43,7 +43,9 @@ class AnonymizationPipeline:
         subject_id = int(row["subject_id"])
         existing = self.identity_repo.get_by_subject(subject_id)
         if existing:
-            return str(existing["pseudonym"]), int(existing["schnorr_public_key"])
+            return str(existing["pseudonym"]), int(
+                str(existing["schnorr_public_key"]), 16
+            )
 
         salt = self.crypto.new_salt()
         stretched = self.crypto.stretched_hash(str(row["rut"]), salt)
@@ -64,8 +66,7 @@ class AnonymizationPipeline:
                 "rut_stretched_hash": stretched,
                 "nombre_cifrado": self.crypto.encrypt_text(str(row["nombre"])),
                 "rut_cifrado": self.crypto.encrypt_text(str(row["rut"])),
-                "schnorr_secret_cifrado": self.crypto.encrypt_text(str(secret)),
-                "schnorr_public_key": public_key,
+                "schnorr_public_key": format(public_key, "x"),
             }
         )
         return pseudonym, public_key
@@ -86,7 +87,7 @@ class AnonymizationPipeline:
                     "risk_group": self._is_risk(
                         float(row["systolic_bp"]), float(row["diastolic_bp"])
                     ),
-                    "schnorr_public_key": public_key,
+                    "schnorr_public_key": format(public_key, "x"),
                 }
             )
 
@@ -95,9 +96,7 @@ class AnonymizationPipeline:
     def credential_for_subject(self, subject_id: int) -> PatientCredential:
         credential = self._credentials.get(subject_id)
         if credential is None:
-            row = self.identity_repo.get_by_subject(subject_id)
-            if row is None:
-                raise KeyError(f"Paciente {subject_id} no registrado.")
-            secret = int(self.crypto.decrypt_text(str(row["schnorr_secret_cifrado"])))
-            credential = PatientCredential(str(row["pseudonym"]), secret)
+            raise KeyError(
+                f"No hay una credencial Schnorr en memoria para el paciente {subject_id}."
+            )
         return credential

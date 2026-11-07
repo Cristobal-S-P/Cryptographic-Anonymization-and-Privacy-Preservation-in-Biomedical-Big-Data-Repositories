@@ -6,14 +6,14 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import DATA_INPUT, DATA_OUTPUT, MASTER_KEY_PATH
-from src.crypto_utils import IdentityCrypto
+from src.crypto_utils import CryptoError, IdentityCrypto
 from src.entropy import EntropyAnalyzer
 from src.ingestion import ClinicalCSVLoader, IngestionError
 from src.pipeline import AnonymizationPipeline
 from src.mimic_adapter import MimicIIIDemoAdapter, MimicAdapterError
 from src.repositories import AnalyticalRepository, IdentityRepository
 from src.sample_data import generate
-from src.verifier import RiskVerifier
+from src.verifier import AuthorizationError, RiskVerifier
 
 
 def run(input_csv: Path, demo_subject: int | None = None) -> None:
@@ -42,11 +42,17 @@ def run(input_csv: Path, demo_subject: int | None = None) -> None:
     print(f"D_ana analítico              : {analytical_path}")
     print(f"Reporte de entropía          : {entropy_path}")
 
-    forbidden_pii = {"nombre", "rut", "salt_b64", "schnorr_secret_cifrado"}
+    forbidden_pii = {
+        "nombre",
+        "rut",
+        "salt_b64",
+        "schnorr_secret",
+        "schnorr_secret_cifrado",
+    }
     pii_detected = sorted(forbidden_pii.intersection(analytical_df.columns))
     print(f"PII directa detectada en D_ana: {'SÍ -> ' + ', '.join(pii_detected) if pii_detected else 'NO'}")
 
-    print("\nEntropía:")
+    print("\nEntropía (métrica complementaria; no demuestra anonimato):")
     for key, value in entropy_report.items():
         print(f"  {key}: {value:.4f}")
 
@@ -55,15 +61,32 @@ def run(input_csv: Path, demo_subject: int | None = None) -> None:
         verifier = RiskVerifier(analytical_repo)
         nonce = verifier.new_nonce()
         proof = verifier.build_proof(credential, nonce)
-        belongs = verifier.verify_and_query(credential.pseudonym, proof)
-        print("\n=== DEMOSTRACIÓN ZK SIMPLIFICADA ===")
-        print(f"Paciente consultado (subject_id local): {demo_subject}")
+        print("\n=== PRUEBA DIDÁCTICA DE POSESIÓN ===")
         print(
             "PII enviada al repositorio analítico : "
             + ("NO" if not pii_detected else "SÍ")
         )
-        print(f"Pseudónimo                             : {credential.pseudonym[:16]}...")
-        print(f"¿Pertenece a cohorte de riesgo?        : {'SÍ' if belongs else 'NO'}")
+        print(
+            "Una prueba válida demuestra posesión de una clave; "
+            "no constituye autorización clínica ni verifica la veracidad del dato."
+        )
+        try:
+            risk_group = verifier.query_risk(
+                credential.pseudonym, proof, session_nonce=nonce
+            )
+        except AuthorizationError:
+            print("¿Prueba de posesión de clave válida?   : NO")
+            print("Consulta didáctica rechazada; resultado no disponible.")
+        else:
+            print("¿Prueba de posesión de clave válida?   : SÍ")
+            print("Resultado de la consulta didáctica:")
+            if risk_group is None:
+                print("  Cohorte de riesgo: SIN DATOS")
+            else:
+                print(
+                    "  ¿Pertenece a cohorte de riesgo?      : "
+                    f"{'SÍ' if risk_group else 'NO'}"
+                )
 
 
 def main() -> None:
@@ -123,7 +146,14 @@ def main() -> None:
             )
 
         run(args.input, args.demo_subject)
-    except (IngestionError, MimicAdapterError, ValueError, KeyError) as exc:
+    except (
+        IngestionError,
+        MimicAdapterError,
+        CryptoError,
+        FileNotFoundError,
+        ValueError,
+        KeyError,
+    ) as exc:
         raise SystemExit(f"ERROR: {exc}") from exc
 
 
